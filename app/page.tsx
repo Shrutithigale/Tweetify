@@ -15,8 +15,12 @@ import { SlOptions } from "react-icons/sl";
 import GoogleLoginButton from "@/components/loginbutton/googlelogin";
 import toast from "react-hot-toast";
 import { CredentialResponse } from "@react-oauth/google";
-import { graphQLClient } from "@/Clients/api";
+import { graphQLClient, queryClient } from "@/Clients/api";
 import { verifyUserGoogleTokenQuery } from "@/graphql/Queries/user";
+import { useCurrentUser } from "@/Hooks/user";
+import { useQueryClient } from "@tanstack/react-query";
+import { InvalidateQueryFilters } from "@tanstack/react-query";
+
 
 
 
@@ -69,25 +73,34 @@ const sidebarMenuItems: TwitterSidebarButton[] = [
 
 export default function Home() {
 
+  const {user} = useCurrentUser()
+  
+  const queryClient = useQueryClient()
+
+
   const handleLoginWithGoogle = useCallback(async (cred:CredentialResponse) => {
   
     // Handle the login response, e.g., save tokens, user info, etc.
     const googleToken = cred.credential;
     if(!googleToken) return toast.error(`Google token not found`)
 
-    const {verifyGoogleToken} =await graphQLClient.request(
+    const {verifyGoogleToken} = await graphQLClient.request(
       verifyUserGoogleTokenQuery,
       {token: googleToken})
 
 
 
       toast.success("verified success")
-      console.log(verifyGoogleToken)
+      console.log(verifyGoogleToken);
 
-      if(verifyGoogleToken) 
-        window.localStorage.setItem("_twitter_token", verifyGoogleToken)
+      if(verifyGoogleToken) {
+        window.localStorage.setItem("_twitter_token", verifyGoogleToken);
+        await queryClient.invalidateQueries({ queryKey: ['current-user'] });
+
+      }
     },
-  []
+
+  [queryClient]
 );
   
 
@@ -96,8 +109,8 @@ export default function Home() {
 
   return (
    <div className={inter.className}>
-    <div className="grid grid-cols-12 h-screen w-screen px-28">
-    <div className="col-span-3 pt-1 border ml-28 ">
+    <div className="grid grid-cols-12 h-screen w-screen px-56">
+    <div className="col-span-4 pt-1 border ml-28 relative">
       <div className="text-2xl h-fit w-fit hover:bg-gray-800 rounded-full p-4 cursor-pointer transition-all">
       <BsTwitter />
       </div>
@@ -118,6 +131,22 @@ export default function Home() {
           </button>
           </div>
       </div>
+      {user && <div className=" mt-8 bottom-10 flex gap-2 items-center bg-slate-800 p-3 px-3 py-2 rounded-full">
+        {user && user.profileImageURL && 
+       ( <Image 
+        className="rounded-full"
+        src={user?.profileImageURL} 
+        alt="user-Image" 
+        height={50}
+         width={50}/>)}
+         <div>
+         <h3 className="text-nowrap">
+          {user.firstName} {user.lastName}
+          </h3>
+        
+         </div>
+      </div>
+      }
     </div>
     <div className="col-span-5 border-r-[1px] border-l-[1px] border-gray-600 ">
       <FeedCard/>
@@ -130,18 +159,13 @@ export default function Home() {
       <FeedCard/>
       <FeedCard/>
       <FeedCard/>
-      <FeedCard/>
-      <FeedCard/>
-      <FeedCard/>
-      <FeedCard/>
-      <FeedCard/>
-      <FeedCard/>
+     
     </div>
     <div className="col-span-3 p-5">
-      <div className=" p-5 bg-slate-700 rounded-lg">
+      {!user && <div className=" p-5 bg-slate-700 rounded-lg">
         <h1 className="my-2 text-2xl">New to Tweetify??</h1>
     <GoogleLoginButton onSuccess={handleLoginWithGoogle} />
-    </div>
+    </div>}
 
     </div>
     </div>

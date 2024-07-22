@@ -2,9 +2,16 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import {AuthProvider} from "./providers/AuthProvider"
-import toast, { Toaster } from 'react-hot-toast';
+import  { Toaster } from 'react-hot-toast';
+import { QueryClientProvider , QueryClient } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { QueryProvider } from "./providers/QueryProvider";
 
 const inter = Inter({ subsets: ["latin"] });
+
+
+const queryClient = new QueryClient()
+
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -20,11 +27,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
     
-    
+        <QueryProvider>
         <AuthProvider>
         {children}
         <Toaster/>
+        <ReactQueryDevtools/>
         </AuthProvider>
+        </QueryProvider>
+        
         
 
       </body>
