@@ -1,5 +1,5 @@
 import { graphQLClient } from "@/Clients/api"
-import { getCurrentUserQuery } from "@/graphql/Queries/user"
+import { getCurrentUserQuery } from "@/graphql/query/user"
 import { useQuery } from "@tanstack/react-query"
 
 export const useCurrentUser = () => {
